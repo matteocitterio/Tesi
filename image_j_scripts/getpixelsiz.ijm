@@ -7,7 +7,6 @@
 //Output_pathname= pathname of the output filename (ending in .csv) [TYPE STRING]
 //output_folder_name= name of the folder in which the csv file will be saved [TYPE STRING]
 
-
 number_of_images=N_Images;
 print('new cycle     ')
 path_image= Folder_path;
@@ -17,9 +16,7 @@ for (j=0; j<number_of_images; j++){
 	
 	roiManager("reset");
 	pixel_size=0.1214;
-	counter=j+1;
-	title_temp=toString(counter);
-	title=title_temp+'.tif';			//name of the image which is needed to open
+	title=toString(j+1)+'.tif';			//name of the image which is needed to open
 
 	open(path_image+title);
 	selectWindow(title);
@@ -28,10 +25,9 @@ for (j=0; j<number_of_images; j++){
 	getPixelSize(unit, pw, ph, pd);
 	print(unit,pw,ph,pd);
 	print(f,d2s(pw,6));
-	
 	selectWindow(title);
 	close();
 
 }
 File.close(f);
-print('finito');
+print('Done');
