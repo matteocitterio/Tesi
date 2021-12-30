@@ -1,7 +1,7 @@
 
-number_of_images=63;
+number_of_images=7;
 
-for (j=0; j<number_of_images; j++){
+for (j=3; j<number_of_images; j++){
 	print('This iteration is: ', j);
    	//wait(0.5); {just a delay to see the answer in the Info window}
 
@@ -10,11 +10,11 @@ for (j=0; j<number_of_images; j++){
 	hello=j+1;
 	title_temp=toString(hello);
 	save_temp=toString(j);
-	title=title_temp+'.tif'+'.tif';
-	new_path="ROI_3_INT_Normal";						//da cambiare quando guardi altre immagini da una altra cartella
+	title=title_temp+'.tif';
+	new_path="ROI_13_INT_Tumor";						//da cambiare quando guardi altre immagini da una altra cartella
 	//old_path_image="infiltrating";
-	path_processed="D:\\risultati_segment\\"+ new_path+ "\\";
-	path_image="D:\\SCAN - Copia\\"+new_path+ "\\";
+	path_processed="D:\\matteo_citterio\\risultati_segment\\"+ new_path+ "\\";
+	path_image="D:\\matteo_citterio\\SCAN - Copia\\"+new_path+ "\\";
 
 	print(title);
 
@@ -27,11 +27,12 @@ for (j=0; j<number_of_images; j++){
 	nuc_ID = getImageID();
 	selectWindow("nuc");
 	
-	run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'nuc', 'modelChoice':'Versatile (H&E nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', 'percentileTop':'99.8', 'probThresh':'0.692478', 'nmsThresh':'0.3', 'outputType':'Both', 'nTiles':'6', 'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'true', 'showProbAndDist':'false'], process=[false]");
+	run("Scale...", "x=0.3 y=0.3 interpolation=Bilinear average create title=downScale");
+	run("Command From Macro", "command=[de.csbdresden.stardist.StarDist2D], args=['input':'downScale', 'modelChoice':'Versatile (H&E nuclei)', 'normalizeInput':'true', 'percentileBottom':'1.0', 'percentileTop':'99.8', 'probThresh':'0.692478', 'nmsThresh':'0.3', 'outputType':'Both', 'nTiles':'6', 'excludeBoundary':'2', 'roiPosition':'Automatic', 'verbose':'false', 'showCsbdeepProgress':'true', 'showProbAndDist':'false'], process=[false]");
 	//selectWindow("Label Image");
 	//close();
 	roiManager("Measure");
-	selectWindow("Results");
+	selectWindow("Results");  
 	saveAs("Results", path_processed+"Results_"+hello+".csv");
 	selectWindow("Results");
 	run("Clear Results");
