@@ -1,22 +1,25 @@
 
-number_of_images=8;
+//script used to quickly extract the pixel size out of a folder of imagers in ImageJ. Images needed to be '.tif' in order to be opened
+
+//PARAMETERS:
+//N_images= number of images inside the considered folder [TYPE INT]
+//Folder_path= path of the considered folder containing N_images [TYPE STRING]
+//Output_pathname= pathname of the output filename (ending in .csv) [TYPE STRING]
+//output_folder_name= name of the folder in which the csv file will be saved [TYPE STRING]
+
+
+number_of_images=N_Images;
 print('new cycle     ')
-new_path="Cropped_13_Tumor";						//da cambiare quando guardi altre immagini da una altra cartella
-path_processed="D:\\matteo_citterio\\risultati_segment\\"+ new_path+ "\\";
-path_image="C:\\Users\\stefa\\Documents\\MEGAsync Downloads\\"+new_path+ "\\";
-resultFilename = "D:\\matteo_citterio\\risultati_segment\\"+new_path+"pixel_sizes.csv";
+path_image= Folder_path;
+resultFilename = Output_pathname+".csv";
 f = File.open(resultFilename);
 for (j=0; j<number_of_images; j++){
-   	//wait(0.5); {just a delay to see the answer in the Info window}
 	
 	roiManager("reset");
 	pixel_size=0.1214;
-	hello=j+1;
-	title_temp=toString(hello);
-	save_temp=toString(j);
-	title=title_temp+'.tif';
-
-	//print(title);
+	counter=j+1;
+	title_temp=toString(counter);
+	title=title_temp+'.tif';			//name of the image which is needed to open
 
 	open(path_image+title);
 	selectWindow(title);
@@ -25,19 +28,10 @@ for (j=0; j<number_of_images; j++){
 	getPixelSize(unit, pw, ph, pd);
 	print(unit,pw,ph,pd);
 	print(f,d2s(pw,6));
-
-
-// you have made an RGB with gray and magenta,
-// which is a bad idea because now hte cell staining is in all the channels
-// try to keep independant colors (Red, Green, Blue)
-// here is a trick
-
 	
 	selectWindow(title);
 	close();
 
-	//selectImage(img_title);
-	//roiManager("Show All");
 }
 File.close(f);
 print('finito');
