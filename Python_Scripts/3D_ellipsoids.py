@@ -1,3 +1,5 @@
+#Used to create an illustrative image with ellipsoids randomly orientated.
+
 import numpy as np
 from numpy import linalg
 from mpl_toolkits.mplot3d import Axes3D
@@ -22,7 +24,7 @@ x_maxs=[]
 y_maxs=[]
 z_maxs=[]
 
-#compute each and plot each ellipsoid iteratively
+#compute and plot each ellipsoid iteratively
 for indx in range(0,ellipNumber):
     # your ellispsoid and center in matrix form
     A = np.array([[np.random.random_sample(),0,0],
