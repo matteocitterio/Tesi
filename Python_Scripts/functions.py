@@ -1,3 +1,5 @@
+#this file contains all the custom functions wrote and used in the work. 
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,53 +26,7 @@ import skimage.io
 from skimage.measure import EllipseModel
 import matlab.engine
 
-def fitEllipse(x,y):
-	x = x[:,np.newaxis]
-	y = y[:,np.newaxis]
-	D =  np.hstack((x*x, x*y, y*y, x, y, np.ones_like(x)))
-	S = np.dot(D.T,D)
-	C = np.zeros([6,6])
-	C[0,2] = C[2,0] = 2; C[1,1] = -1
-	E, V =  eig(np.dot(inv(S), C))
-	n = np.argmax(np.abs(E))
-	a = V[:,n]
-	return a
-
-def ellipse_center(a):
-	b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-	num = b*b-a*c
-	x0=(c*d-b*f)/num
-	y0=(a*f-b*d)/num
-	return np.array([x0,y0])
-
-
-def ellipse_angle_of_rotation( a ):
-	b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-	return 0.5*np.arctan(2*b/(a-c))
-
-
-def ellipse_axis_length( a ):
-	b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-	up = 2*(a*f*f+c*d*d+g*b*b-2*b*d*f-a*c*g)
-	down1=(b*b-a*c)*( (c-a)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
-	down2=(b*b-a*c)*( (a-c)*np.sqrt(1+4*b*b/((a-c)*(a-c)))-(c+a))
-	res1=np.sqrt(up/down1)
-	res2=np.sqrt(up/down2)
-	return np.array([res1, res2])
-
-def ellipse_angle_of_rotation2( a ):
-	b,c,d,f,g,a = a[1]/2, a[2], a[3]/2, a[4]/2, a[5], a[0]
-	if b == 0:
-		if a > c:
-			return 0
-		else:
-			return np.pi/2
-	else: 
-		if a > c:
-			return np.arctan(2*b/(a-c))/2
-		else:
-			return np.pi/2 + np.arctan(2*b/(a-c))/2
-
+#GUI interface function used to ask a yes/NO question and get a keyboard input
 
 def yes_or_no(question):					#utile per gestire lo stream, ritorna True se in tastiera do y e False  
 	reply = str(input(question+' (y/n): ')).lower().strip()	#viceversa
@@ -81,6 +37,10 @@ def yes_or_no(question):					#utile per gestire lo stream, ritorna True se in ta
 	else:
 		return yes_or_no("Uhhhh... please enter ")
 
+#Given a list p of points (as countour of a shape) and a Scipy Voronoi type vor, the function returns the voronoi regions found to be inside this path 
+#and the corresponding nuclei positions. This is achieved (a convexhull problem) by using a matplotlib built-in function called p.contains_points
+#The funtion can even plot a representation of the situation if the boolean disegno is set to True and a matplotliv axes ax is given.
+	
 def voronoi_vertices_in_path(p,vor,ax=0,disegno=False):
 
 	list_of_regions_inside_path=[]
@@ -171,6 +131,10 @@ def run_stats(num_nuclei, dataframe, dataframe_kw,av_observable,ax,pos_x_ax,pos_
 		ax[pos_x_ax,pos_y_ax].set_xscale('log')
 		ax[pos_x_ax,pos_y_ax].set_yscale('log')
 
+#this function simply creates an array containing nuclei coordinates and other info measured through Fiji and read from the .csv file (in form of a pandas dataframe)
+#num nuclei is the number of nuclei found (or simply the number of rows of df)
+#df is the Pandas DataFrame containing all the info measured through Fiji (simply is df=pd.read('file.csv'))
+		
 def create_nuclei_array(num_nuclei,df):				#crea un array con le pos dei cdm dei nuclei dalla df di stardist
 
 	nuclei_val=np.zeros((num_nuclei,5))
@@ -188,6 +152,8 @@ def create_nuclei_array(num_nuclei,df):				#crea un array con le pos dei cdm dei
 
 	return nuclei,nuclei_val
 
+#Given the column header, it returns an array containing the corresponding quantity
+
 def create_nuclei_quantity_array(num_nuclei,df,string_kw):
 
 	quantity=np.zeros((num_nuclei))
@@ -198,10 +164,12 @@ def create_nuclei_quantity_array(num_nuclei,df,string_kw):
 
 	return quantity
 
+#returns the euclidean distance given two coordinates
+
 def get_distance(x1,y1,x2,y2):
 
 	return ((x1-x2)**2+(y1-y2)**2)**0.5
-	
+
 def min_distance(x,y,cx,cy):
 #x and y are arrays representing a line, cx,cy are the coordinates of the center of a circle and r is the ray of the last one
 #x and y have the same size
@@ -213,140 +181,10 @@ def min_distance(x,y,cx,cy):
 	distances=np.asarray(distances)
 
 	return np.amin(distances)
-
-def intersection(x,y,cx,cy,r):
-#x and y are arrays representing a line, cx,cy are the coordinates of the center of a circle and r is the ray of the last one
-#x and y have the same size
-
-	return min_distance(x,y,cx,cy)<=r
-
-def box_intersection(xv1,yv1,xv2,yv2,xh1,yh1,xh2,yh2,cx,cy,r):
-#x and y are arrays representing a line, cx,cy are the coordinates of the center of a circle and r is the ray of the last one
-#x and y have the same size
-
-	return (min_distance(xv1,yv1,cx,cy)<=r) or (min_distance(xv2,yv2,cx,cy)<=r) or  (min_distance(xh1,yh1,cx,cy)<=r) or  (min_distance(xh2,yh2,cx,cy)<=r)
-
-def get_vertex_distances(cx,cy):
-
-	distances=np.zeros((4))
-	distances[0]=get_distance(0,0,cx,cy)
-	distances[1]=get_distance(0,1460,cx,cy)
-	distances[0]=get_distance(1936,1460,cx,cy)
-	distances[0]=get_distance(1936,0,cx,cy)	
-	return distances
-
-def get_angoli_buoni(normal_dist,r,vertex_minor_distances):
-
-	angles=np.zeros((4))
-	for i in range(0,4):
-
-		angles[i]=np.arccos(normal_dist[i]/r)	
-
-def pair_correlation_function(data,data_size,first_image_side,second_image_side,num_bins):
-
-	fig,ax =plt.subplots(3,2, figsize=(16,9))
-
-	a=get_distances_matrix(data,data_size)
-	bins=np.linspace(0,((first_image_side**2)+(second_image_side**2))**0.5,num_bins)
-	media_ar=np.average(data[:,2])
-	quad_ar=data[:,2]**2
-	media_quad_ar=np.average(quad_ar)
-	media_perim=np.average(data[:,4])
-	quad_perim=data[:,4]**2
-	media_quad_perim=np.average(quad_perim)
-	media_circ=np.average(data[:,3])
-	quad_circ=data[:,3]**2
-	media_quad_circ=np.average(quad_circ)
-	media_area=np.average(data[:,5])
-	quad_area=data[:,5]**2
-	media_quad_area=np.average(quad_area)
-	media_round=np.average(data[:,6])
-	quad_round=data[:,6]**2
-	media_quad_round=np.average(quad_round)
-
-	digitized= np.digitize(a[0,:], bins)
-
-	matrix_4_histo=np.zeros((num_bins,data_size))
-
-	j=0
-	for i in range(1,len(digitized)):
-
-		if(a[0,i]!=0):
-
-			matrix_4_histo[digitized[i]-1,j]+=1
-		else:
-			print(j)
-			j+=1
-
-	medie=[]
-
-	for i in range(0,num_bins):
-
-		medie.append(matrix_4_histo[i,:].mean())
-
-	bin_means_ar= [a[1,:][digitized == i].mean() for i in range(1, len(bins))]
-	bin_means_perim=[a[2,:][digitized == i].mean() for i in range(1, len(bins))]
-	bin_means_circ=[a[3,:][digitized == i].mean() for i in range(1, len(bins))]
-	bin_means_area=[a[4,:][digitized == i].mean() for i in range(1, len(bins))]
-	bin_means_round=[a[5,:][digitized == i].mean() for i in range(1, len(bins))]
-
-	bins_revised=np.zeros((num_bins-1))
-
-	for i in range(1,len(bins)):
-
-		bins_revised[i-1]=(bins[i]+bins[i-1])/2
-	ax[0][0].plot(bins_revised,bin_means_ar,'-o',c='red')
-	ax[0][0].axhline(media_ar**2,label='$(<ar>)^2$')								#quadrato della media, valore atteso in +infty
-	ax[0][0].axhline(media_quad_ar,c='green',label='$<ar^2>$')
-	ax[0][0].set_title('Aspect Ratio')
-	ax[0][0].set_ylabel('C(r)')
-	ax[0][0].legend()
-	ax[0][1].plot(bins,medie,'o',c='red')
-	ax[0][1].axhline(1, label='1 count')								#quadrato della media, valore atteso in +infty
-	ax[0][1].axhline(15,c='green',label='15 counts')
-	ax[0][1].set_ylabel('#counts')
-	ax[0][1].set_title('<conteggi> per r')
-	ax[1][0].plot(bins_revised,bin_means_area,'-o',c='red')
-	ax[1][0].axhline(media_area**2,label='$(<area>)^2$')								#quadrato della media, valore atteso in +infty
-	ax[1][0].axhline(media_quad_area,c='green',label='$<area^2>$')
-	ax[1][0].set_title('Area')
-	ax[1][0].set_ylabel('C(r)')
-	ax[1][0].legend()
-	ax[1][1].plot(bins_revised,bin_means_circ,'-o',c='red')
-	ax[1][1].axhline(media_circ**2,label='$(<circ>)^2$')								#quadrato della media, valore atteso in +infty
-	ax[1][1].axhline(media_quad_circ,c='green',label='$<circ^2>$')
-	ax[1][1].set_title('Circularity')
-	ax[1][1].legend()
-	ax[2][0].plot(bins_revised,bin_means_perim,'-o',c='red')
-	ax[2][0].axhline(media_perim**2,label='$(<perim>)^2$')								#quadrato della media, valore atteso in +infty
-	ax[2][0].axhline(media_quad_perim,c='green',label='$<perim^2>$')
-	ax[2][0].set_title('Perimeter')
-	ax[2][0].set_xlabel('r [pixel]')
-	ax[2][0].set_ylabel('C(r)')
-	ax[2][0].legend()
-	ax[2][1].plot(bins_revised,bin_means_round,'-o',c='red')
-	ax[2][1].axhline(media_round**2,label='$(<round>)^2$')								#quadrato della media, valore atteso in +infty
-	ax[2][1].axhline(media_quad_round,c='green',label='$<round^2>$')
-	ax[2][1].set_title('Roundness')
-	ax[2][1].set_xlabel('r [pixel]')
-	ax[2][1].set_ylabel('C(r)')
-	ax[2][1].legend()
-
-	plt.tight_layout()
-
-	plt.show()
-				
-def create_circularity_array(num_nuclei,df):
-
-	Circ=np.zeros((num_nuclei))
-
-	for i in range(0,num_nuclei):
-
-		Circ[i]=df['Circ.'].iloc[i]
-
-	return Circ
-
-def create_function_circularity(num_nuclei,df):
+			
+#It returns an array containing nuclei positions and aspect ratio		
+		
+def create_function(num_nuclei,df):
 
 	temp_nuc=create_nuclei_array(num_nuclei,df)
 	temp_ar=create_circularity_array(num_nuclei,df)
@@ -361,198 +199,17 @@ def create_function_circularity(num_nuclei,df):
 
 	return funct
 
-def pair_correlation_function_for_iterations(data,data_size,first_image_side,second_image_side,num_bins,kw):
-
-	if (kw=='AR'):							#capisco la particolare kw
-
-		indicator=2
-	elif(kw=='Perim.'):
-
-		indicator=4
-	elif(kw=='Circ.'):
-
-		indicator=3
-	elif(kw=='Area'):
-
-		indicator=5
-	elif(kw=='Round'):
-
-		indicator=6
-	
-	image_diagonal=((first_image_side**2)+(second_image_side**2))**0.5				#diagonale dell'immagine
-	a=get_distances_and_quantities_vectors(data,data_size,name='ok')	#matrice delle distanze e vettore con grandezze
-	bins=np.linspace(0,image_diagonal,num_bins)
-	media=data[:,indicator].mean()
-	media_quad=(data[:,indicator]**2).mean()
-	digitized= np.digitize(a[0,:], bins)					#ritorna indici che servono per binnare poi il mio array
-
-	bin_rays=[len(a[indicator-1,:][digitized == i]) for i in range(1, num_bins+1)]			#conteggi a raggio
-	bin_means= [a[indicator-1,:][digitized == i].mean() for i in range(1, num_bins+1)]		#C(r)
-
-	return bins, bin_means, bin_rays, media, media_quad
-
-def pololifit(data_size,side_1,side_2,num_bins,):
-
-	alpha=np.random.random(data_size)*side_1
-	beta=np.random.random(data_size)*side_2
-	gamma=np.random.random(data_size)+1
-
-	punti=np.zeros((data_size,3))
-	h=0
-	print('Creating points')
-	for i in range(0,len(alpha)):
-
-		punti[i][0]=alpha[i]
-		punti[i][1]=beta[i]
-		punti[i][2]=gamma[h]
-		h+=1
-
-	distances_matrix=np.zeros((data_size,data_size))
-	h=0
-	distances_vector=[]
-	value_vector_ar=[]
-
-	for i in range(0,data_size):
-
-		# print(i,'/',data_size)
-
-		for j in range(h,data_size):
-
-			distances_matrix[i][j]=get_distance(punti[i][0],punti[i][1],punti[j][0],punti[j][1])
-			distances_vector.append(distances_matrix[i][j])
-			value_vector_ar.append(punti[i][2]*punti[j][2])
-
-		h+=1
-
-	print('binning')
-
-	distances_vector,value_vector_ar=np.asarray(distances_vector),np.asarray(value_vector_ar)		#array con distanze reciproche e valori
-	a=np.zeros((2,len(distances_vector)))
-	a[0,:]=distances_vector
-	a[1,:]=value_vector_ar
-	bins=np.linspace(0,((side_1**2)+(side_2**2))**0.5,num_bins)		
-	digitized= np.digitize(a[0,:], bins)	
-	inmezzo=[]
-
-	for i in range(1,num_bins+1):
-
-		# print(i,'/',num_bins+1)
-		inmezzo.append(len(a[1,:][digitized == i]))
-
-
-	inmezzo=np.asarray(inmezzo)
-	max=inmezzo.max()
-
-	return np.polyfit(bins,inmezzo,deg=10)
-
-def fit_equation(poly_coeffs,x):
-
-	return poly_coeffs[0]*(x**10)+poly_coeffs[1]*(x**9)+poly_coeffs[2]*(x**8)+poly_coeffs[3]*(x**7)+poly_coeffs[4]*(x**6)+poly_coeffs[5]*(x**5)+poly_coeffs[6]*(x**4)+poly_coeffs[7]*(x**3)+poly_coeffs[8]*(x**2)+poly_coeffs[9]*(x)+poly_coeffs[10]
-
-def density_profile_function(data,data_size,side1,side2,num_bins):
-
-	smallest_side=np.minimum(side1,side2)
-	image_diagonal=((side1**2)+(side2**2))**0.5				#diagonale dell'immagine
-	print('getting distances')
-	a=get_distances_and_quantities_vectors(data,data_size,'ad casum',simple=True)	#matrice delle distanze e vettore con grandezze
-	bins=np.linspace(0,image_diagonal,num_bins)
-	
-	digitized= np.digitize(a[0,:], bins)					#ritorna indici che servono per binnare poi il mio array
-	
-	bin_rays=[len(a[0,:][digitized == i]) for i in range(1, num_bins+1)]			#conteggi a raggio
-
-	dr=(image_diagonal)/num_bins
-	print('dr',dr)
-	numer_of=int((smallest_side/(dr*2))-1)
-	print('nuovo numero calcoalto',numer_of)
-	print('numero input',num_bins)
-	print(smallest_side)
-
-	bin_rays_not_modi=[]
-
-	for j in range(0,numer_of):
-
-
-		print(j,'/',numer_of)
-
-		bin_rays_not_modi.append(bin_rays[j])
-		bin_rays[j]=bin_rays[j]/analytic_function(side1,side2,(bins[j]+2*dr),1,data_size,dr=dr/2)
-	
-
-	return bins, bin_rays,numer_of,bin_rays_not_modi
-
-def density_matlab():
-
-	eng = matlab.engine.start_matlab()
-	eng.density	(nargout=0)
-	eng.quit()
-
-def density_check():
-
-	eng = matlab.engine.start_matlab()
-	eng.density_check	(nargout=0)
-	eng.quit()
-
-def density_profile_function_amara(data,data_size,side1,side2,num_bins):
-
-	smallest_side=np.minimum(side1,side2)
-	image_diagonal=((side1**2)+(side2**2))**0.5				#diagonale dell'immagine
-	simul_data_size=1000
-	alpha=np.random.random(simul_data_size)*side1        #uniforme reali
-	beta=np.random.random(simul_data_size)*side2
-	gamma=np.random.random(simul_data_size)+1
-
-	punti=np.zeros((data_size,3))
-	h=0
-	print('Creating points')
-	for i in range(0,len(alpha)):
-
-		punti[i][0]=alpha[i]
-		punti[i][1]=beta[i]
-		h+=1
-
-	print('points created')	
-	print('getting real distances')
-	a=get_distances_and_quantities_vectors(data,data_size,'real',simple=True)	#matrice delle distanze e vettore con grandezze
-	print('getting simulated distances')
-	b=get_distances_and_quantities_vectors(punti,simul_data_size,'simu',simple=True)
-	bins=np.linspace(0,image_diagonal,num_bins)
-	
-	print('digitizing real data...')
-	digitized_real= np.digitize(a[0,:], bins)					#ritorna indici che servono per binnare poi il mio array
-	print('digitizing simulation data...')
-	digitized_simu= np.digitize(b[0,:], bins)
-	step=image_diagonal/num_bins
-	num_iterations=int((smallest_side/(2*step)))
-	simul_bin_rays=np.zeros((num_iterations))
-	bin_rays=np.zeros((num_iterations))                           #il primo elemento sarà per definiziione nullo: numero di elementi ad una distanza zero (escluso se stesso)
-	cum_real=0
-	cum_simu=0
-
-	xs=np.zeros((num_iterations))
-
-	area=side1*side2
-	density=simul_data_size/area
-
-	for i in range(1,num_iterations):                           #perchè digitized ritorna il bin a cui appartiene, bins invece ha gli estremi
-
-		print(i,'/',num_iterations)
-		xs[i]=bins[i]
-		bin_rays[i]=cum_real+len(a[0,:][digitized_real == i])      #[i-1] semplicemente per come si contano gli elementi
-		cum_real+=len(a[0,:][digitized_real == i])
-		simul_bin_rays[i]=cum_simu+len(b[0,:][digitized_simu == i])
-		cum_simu+=len(b[0,:][digitized_simu == i])
-
-	simul_bin_rays=simul_bin_rays*data_size/(simul_data_size)
-	density_profile=bin_rays/simul_bin_rays
-	
-
-	return xs,density_profile
+#Pair correlation function: per calcolarla parte dal contorno relativo alla particolare immagine, ci spara dentro punti distribuiti in maniera uniforme e
+#calcola quanto diversamente quelli reali si distribuiscano da quelli simulati
+#img_folder e la cartella contenente l'immagine.tif
+#img_N its the ordinal number associated to the particular image
+#random_points is the number of random_points to be generated (the more the more accurate and computationally slower the program would be).
+#If check==True, a plot of the image and the simulated points will be plotted.
 
 def g_r(img_folder,img_N,random_points,check=False):
 
-	df=pd.read_csv('D:\matteo_citterio\\risultati_segment\\'+img_folder+'\Results_'+str(img_N)+'.csv')
-	posizioni=pd.read_csv('D:\matteo_citterio\\risultati_segment\\'+img_folder+'\contour'+str(img_N-1)+'.csv')
+	df=pd.read_csv('D:\matteo_citterio\\risultati_segment\\'+img_folder+'\Results_'+str(img_N)+'.csv') #this contains the nuclei infp
+	posizioni=pd.read_csv('D:\matteo_citterio\\risultati_segment\\'+img_folder+'\contour'+str(img_N-1)+'.csv')# this contains the points creating the particular countor 
 	num_nuclei=len(df.axes[0])
 
 	img=skimage.io.imread('D:\matteo_citterio\SCAN - Copia\\'+img_folder+'\\'+str(img_N)+'.tif')
@@ -879,6 +536,8 @@ def g_r_and_nematic(img_folder,img_N,random_points,multi=10/3,check=False):
 		#plt.show()
 
 	return xs,quoz,nem_energy
+
+#this function truncates a given colormap
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 	new_cmap = colors.LinearSegmentedColormap.from_list(
