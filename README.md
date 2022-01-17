@@ -1,2 +1,2 @@
 # Tesi
-Entire set of Python code used for image analysis
+Entire set of Python & ImageJ code used for image analysis
